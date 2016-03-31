@@ -21,11 +21,11 @@ defaultOpts
 -- | Options for 'getOpt'
 options :: [OptDescr (Opts -> Opts)]
 options =
-    [ Option ['v']
-             ["verbose"]
-             (NoArg $ \o -> o {optVerbose = True})
-             "extra output, debugging output"
+    [ mk ['v'] ["verbose"] "extra output, debugging output"
+         (NoArg $ \o -> o {optVerbose = True})
     ]
+  where
+    mk so lo desc o = Option so lo o desc
    
 main = do
     args <- getArgs
