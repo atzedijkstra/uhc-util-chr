@@ -37,7 +37,7 @@ options :: [OptDescr (Opts -> Opts)]
 options =
     [ mk "v" ["verbose"] "extra output, debugging output"
          (NoArg $ optVerbose ^= True)
-    , mk "s" ["succeed-on-leftover"] "left over unresolvable (non residue) work is also a succesful result"
+    , mk "s" ["succeed-on-leftover"] "left over unresolvable (non residue) work is also a successful result"
          (NoArg $ optSucceedOnLeftoverWork ^= True)
     , mk "h" ["help"] "print this help"
          (NoArg $ optImmQuit ^$= (ImmQuit_Help :))
