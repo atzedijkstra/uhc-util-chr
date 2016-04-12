@@ -17,8 +17,9 @@ data ImmQuit
 -- | Program options
 data Opts
   = Opts
-      { _optVerbose                 :: Bool
-      , _optSucceedOnLeftoverWork   :: Bool
+      { _optVerbosity               :: Verbosity
+      , _optSucceedOnNoWorkLeft     :: Bool
+      , _optSucceedOnFailedSolve    :: Bool
       , _optImmQuit                 :: [ImmQuit]
       }
 
@@ -27,8 +28,9 @@ mkLabel ''Opts
 defaultOpts :: Opts
 defaultOpts
   = Opts
-      { _optVerbose                 = False
-      , _optSucceedOnLeftoverWork   = False
+      { _optVerbosity               = Verbosity_Quiet
+      , _optSucceedOnNoWorkLeft     = False
+      , _optSucceedOnFailedSolve    = False
       , _optImmQuit                 = []
       }
 
@@ -36,15 +38,19 @@ defaultOpts
 options :: [OptDescr (Opts -> Opts)]
 options =
     [ mk "v" ["verbose"] "extra output, debugging output"
-         (NoArg $ optVerbose ^= True)
-    , mk "s" ["succeed-on-leftover"] "left over unresolvable (non residue) work is also a successful result"
-         (NoArg $ optSucceedOnLeftoverWork ^= True)
+         (OptArg (maybe (optVerbosity ^= Verbosity_Normal) (\l -> optVerbosity ^= toEnum (read l))) "LEVEL")
+    , mk "s" ["succeed-only-without-leftover"] "succeed only if no work is left over"
+         (NoArg $ optSucceedOnNoWorkLeft ^= True)
+    , mk "" ["succeed-on-failed"] "failed solve is considered also a successful result, with the failed constraint as a residue"
+         (NoArg $ optSucceedOnFailedSolve ^= True)
     , mk "h" ["help"] "print this help"
          (NoArg $ optImmQuit ^$= (ImmQuit_Help :))
     ]
   where
     mk so lo desc o = Option so lo o desc
-   
+
+-- RunOpt_Verbosity
+
 main = do
     args <- getArgs
     progname <- getProgName
@@ -60,8 +66,9 @@ main = do
              -- no immediate quit options
              _ -> do
                flip runFile fn $ 
-                 (if _optVerbose opts then [RunOpt_DebugTrace] else []) ++
-                 (if _optSucceedOnLeftoverWork opts then [RunOpt_SucceedOnLeftoverWork] else [])
+                 [RunOpt_Verbosity $ _optVerbosity opts] ++
+                 (if _optSucceedOnNoWorkLeft opts then [] else [RunOpt_SucceedOnLeftoverWork]) ++
+                 (if _optSucceedOnFailedSolve opts then [RunOpt_SucceedOnFailedSolve] else [])
 
        (_,_,errs) -> do
            printUsage progname errs
