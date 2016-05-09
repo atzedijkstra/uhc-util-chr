@@ -20,6 +20,7 @@ data Opts
       { _optVerbosity               :: Verbosity
       , _optSucceedOnNoWorkLeft     :: Bool
       , _optSucceedOnFailedSolve    :: Bool
+      , _optShowVisualization       :: Bool
       , _optImmQuit                 :: [ImmQuit]
       }
 
@@ -31,6 +32,7 @@ defaultOpts
       { _optVerbosity               = Verbosity_Quiet
       , _optSucceedOnNoWorkLeft     = False
       , _optSucceedOnFailedSolve    = False
+      , _optShowVisualization       = False
       , _optImmQuit                 = []
       }
 
@@ -43,6 +45,8 @@ options =
          (NoArg $ optSucceedOnNoWorkLeft ^= True)
     , mk "" ["succeed-on-failed"] "failed solve is considered also a successful result, with the failed constraint as a residue"
          (NoArg $ optSucceedOnFailedSolve ^= True)
+    , mk "" ["visualize"] "create visualization"
+         (NoArg $ optShowVisualization ^= True)
     , mk "h" ["help"] "print this help"
          (NoArg $ optImmQuit ^$= (ImmQuit_Help :))
     ]
@@ -68,6 +72,7 @@ main = do
                flip runFile fn $ 
                  [RunOpt_Verbosity $ _optVerbosity opts] ++
                  (if _optSucceedOnNoWorkLeft opts then [] else [RunOpt_SucceedOnLeftoverWork]) ++
+                 (if _optShowVisualization opts then [RunOpt_WriteVisualization] else []) ++
                  (if _optSucceedOnFailedSolve opts then [RunOpt_SucceedOnFailedSolve] else [])
 
        (_,_,errs) -> do
